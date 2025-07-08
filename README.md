@@ -1,61 +1,182 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 Laravel Project Setup with Docker
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This guide explains how to set up and run ** Laravel project** using Docker and Docker Compose.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✅ Prerequisites
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Before starting, make sure you have:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Docker](https://www.docker.com/products/docker-desktop) installed
+- [Docker Compose](https://docs.docker.com/compose/) available
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## ⚙️ Step-by-Step Setup
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Use this docker-compose.yml
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+version: "3.8"
 
-## Laravel Sponsors
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mysql
+    networks:
+      - laravel
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+  web:
+    image: nginx:alpine
+    container_name: laravel-web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - laravel
 
-### Premium Partners
+  mysql:
+    image: mysql:8.0
+    container_name: laravel-mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_TCP_PORT=3306
+    ports:
+      - 3310:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - laravel
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+  composer:
+    image: composer
+    container_name: laravel-composer
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    entrypoint: ["composer"]
+    networks:
+      - laravel
 
-## Contributing
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - laravel
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+networks:
+  laravel:
 
-## Code of Conduct
+volumes:
+  mysql-data:
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 2. Use this DockerFile
 
-## Security Vulnerabilities
+```bash
+FROM php:8.2-fpm
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Install required system packages and PHP extensions
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    && docker-php-ext-install pdo pdo_mysql
 
-## License
+WORKDIR /var/www/html
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 3. Create .env File
+
+- Copy .env.example to .env
+
+### 4. Update the .env
+
+- Update database section as follows:
+
+```bash
+DB_CONNECTION=mysql    # This MUST match the connection key in database.php
+DB_HOST=laravel-mysql  # container name of mysql
+DB_PORT=3306           # internal port exposed by mysql image
+DB_DATABASE=ecommerce  # name it according to your project
+DB_USERNAME=root
+DB_PASSWORD=root
+```
+
+### 4. Build and Start the Docker Containers
+
+```bash
+docker compose up -d --build
+```
+
+This will:
+
+- Build the PHP container using the Dockerfile
+
+- Start services for: Laravel app, MySQL, PhpMyAdmin, Nginx, and Composer
+
+### 5. Install Laravel Dependencies
+
+```bash
+docker compose run --rm composer install
+```
+
+### 6. Generate Application Key
+
+```bash
+docker compose exec app php artisan key:generate
+```
+
+### 7. Run Database Migrations
+
+```bash
+docker compose exec app php artisan migrate
+```
+
+### 8. Open the Project in Browser
+
+Visit: http://localhost:8000
+
+### 9. Create Model, Migration, and Controller
+
+```bash
+docker compose exec app php artisan make:model Post -mcr
+```
+
+This creates:
+
+- app/Models/Post.php
+- database/migrations/xxxx_create_posts_table.php
+- app/Http/Controllers/PostController.php
+
+Then enjoy building an excellent application
+
+
