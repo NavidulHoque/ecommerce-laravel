@@ -114,11 +114,38 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /var/www/html
 ```
 
-### 3. Create .env File
+### 3. Add defaulf.conf
+
+In nginx/default.conf use - 
+
+```bash
+server {
+    listen 80;
+    index index.php index.html;
+    root /var/www/html/public;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass app:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+### 4. Create .env File
 
 - Copy .env.example to .env
 
-### 4. Update the .env
+### 5. Update the .env
 
 - Update database section as follows:
 
@@ -131,7 +158,7 @@ DB_USERNAME=root
 DB_PASSWORD=root
 ```
 
-### 4. Build and Start the Docker Containers
+### 6. Build and Start the Docker Containers
 
 ```bash
 docker compose up -d --build
@@ -143,29 +170,29 @@ This will:
 
 - Start services for: Laravel app, MySQL, PhpMyAdmin, Nginx, and Composer
 
-### 5. Install Laravel Dependencies
+### 7. Install Laravel Dependencies
 
 ```bash
 docker compose run --rm composer install
 ```
 
-### 6. Generate Application Key
+### 8. Generate Application Key
 
 ```bash
 docker compose exec app php artisan key:generate
 ```
 
-### 7. Run Database Migrations
+### 9. Run Database Migrations
 
 ```bash
 docker compose exec app php artisan migrate
 ```
 
-### 8. Open the Project in Browser
+### 10. Open the Project in Browser
 
 Visit: http://localhost:8000
 
-### 9. Create Model, Migration, and Controller
+### 11. Create Model, Migration, and Controller
 
 ```bash
 docker compose exec app php artisan make:model Post -mcr
