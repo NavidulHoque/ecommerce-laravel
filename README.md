@@ -28,48 +28,37 @@ services:
     container_name: laravel-app
     working_dir: /var/www/html
     volumes:
-      - ./:/var/www/html
-    ports:
-      - "9000:9000"
-    depends_on:
-      - mysql
+      - .:/var/www/html
     networks:
       - laravel
+    depends_on:
+      - mysql
 
-  web:
-    image: nginx:alpine
-    container_name: laravel-web
+  nginx:
+    image: nginx:stable-alpine
+    container_name: laravel-nginx
     ports:
       - "8000:80"
     volumes:
-      - ./:/var/www/html
+      - .:/var/www/html
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
     networks:
       - laravel
+    depends_on:
+      - app
 
   mysql:
     image: mysql:8.0
     container_name: laravel-mysql
-    restart: always
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_TCP_PORT=3306
     ports:
-      - 3310:3306
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
     volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - laravel
-
-  composer:
-    image: composer
-    container_name: laravel-composer
-    working_dir: /var/www/html
-    volumes:
-      - ./:/var/www/html
-    entrypoint: ["composer"]
+      - mysql_data:/var/lib/mysql
     networks:
       - laravel
 
@@ -78,40 +67,52 @@ services:
     container_name: laravel-phpmyadmin
     restart: always
     environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: root
+        PMA_HOST: mysql
+        PMA_PORT: 3306
+        MYSQL_ROOT_PASSWORD: root
     ports:
-      - "8080:80"
+        - "8080:80"
     depends_on:
-      - mysql
+        - mysql
     networks:
-      - laravel
+        - laravel
 
 networks:
   laravel:
 
 volumes:
-  mysql-data:
+  mysql_data:
 ```
 
 ### 2. Use this DockerFile
 
 ```bash
+# Dockerfile
 FROM php:8.2-fpm
 
-# Install required system packages and PHP extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    git \
-    curl \
-    && docker-php-ext-install pdo pdo_mysql
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
 WORKDIR /var/www/html
+
+# Copy everything
+COPY . .
+
+# Install Laravel dependencies
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage
+
+EXPOSE 9000
+CMD ["php-fpm"]
 ```
 
 ### 3. Add defaulf.conf
@@ -119,6 +120,7 @@ WORKDIR /var/www/html
 In nginx/default.conf use - 
 
 ```bash
+# nginx/default.conf
 server {
     listen 80;
     index index.php index.html;
@@ -151,7 +153,7 @@ server {
 
 ```bash
 DB_CONNECTION=mysql    # This MUST match the connection key in database.php
-DB_HOST=laravel-mysql  # container name of mysql
+DB_HOST=mysql  # container name of mysql
 DB_PORT=3306           # internal port exposed by mysql image
 DB_DATABASE=ecommerce  # name it according to your project
 DB_USERNAME=root
@@ -173,7 +175,7 @@ This will:
 ### 7. Install Laravel Dependencies
 
 ```bash
-docker compose run --rm composer install
+docker exec -it laravel-app composer install
 ```
 
 ### 8. Generate Application Key
