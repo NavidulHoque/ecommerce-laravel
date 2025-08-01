@@ -31,7 +31,7 @@ services:
     image: mysql:8.0
     container_name: laravel-mysql
     ports:
-      - "3306:3306"
+      - "3310:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: laravel
@@ -51,7 +51,7 @@ services:
         PMA_PORT: 3306
         MYSQL_ROOT_PASSWORD: root
     ports:
-        - "8080:80"
+        - "8090:80"
     depends_on:
         - mysql
     networks:
