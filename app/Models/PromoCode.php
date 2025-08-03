@@ -4,19 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Category extends Model
+class PromoCode extends Model
 {
-
     protected $fillable = [
-        'name',
-        'description',
-        'created_by',
+        'discount',
+        'start_date',
+        'expiry_date',
+        'status',
+        'created_by'
     ];
-
-    public function subcategories()
-    {
-        return $this->hasMany(SubCategory::class);
-    }
 
     public function creator()
     {

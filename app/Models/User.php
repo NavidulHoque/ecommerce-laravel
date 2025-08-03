@@ -35,6 +35,27 @@ class User extends Authenticatable
     ];
 
     // ✅ Relationships
+    
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function promo_codes()
+    {
+        return $this->hasMany(PromoCode::class, 'created_by');
+    }
 
     public function categories()
     {
@@ -44,6 +65,11 @@ class User extends Authenticatable
     public function resources()
     {
         return $this->hasMany(Resource::class, 'created_by');
+    }
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class);
     }
 
     public function orders()
