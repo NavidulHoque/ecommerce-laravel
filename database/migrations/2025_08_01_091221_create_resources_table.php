@@ -21,13 +21,11 @@ return new class extends Migration
             $table->integer('quantity');
             $table->string('format_url');
             $table->string('format_type');
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('sub_category_id')->constrained()->onDelete('cascade');
-            $table->string('thumbnail')->nullable();
+            $table->foreignId('category_id')->constrained("categories")->onDelete('cascade');
+            $table->foreignId('sub_category_id')->constrained("sub_categories")->onDelete('cascade');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->string('product_id')->unique();
-            $table->json('practice_areas')->nullable();
             $table->timestamps();
         });
     }

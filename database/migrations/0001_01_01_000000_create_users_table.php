@@ -20,7 +20,11 @@ return new class extends Migration
             $table->enum('role', ['buyer', 'seller', 'admin'])->default('buyer');
             $table->enum('gender', ['male', 'female', 'other'])->nullable();
             $table->text('profile_image')->nullable();
-            $table->rememberToken();
+            $table->string('otp')->nullable();
+            $table->string('otp_expires')->nullable();
+            $table->string('refresh_token')->nullable();
+            $table->boolean('isOnline')->default(false);
+            $table->dateTime('lastActiveAt')->nullable();
             $table->timestamps();
         });
 
