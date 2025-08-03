@@ -11,7 +11,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $fields = $request->validate([
-            'name' => 'required|string',
+            'name' => $this->baseValidation(),
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|confirmed'
         ]);
@@ -19,7 +19,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $fields['name'],
             'email' => $fields['email'],
-            'password' => bcrypt($fields['password']),
+            'password' => $fields['password']
         ]);
 
         return response([
@@ -32,7 +32,7 @@ class AuthController extends Controller
     {
         $fields = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => $this->baseValidation()
         ]);
 
         $user = User::where('email', $fields['email'])->first();
@@ -41,11 +41,15 @@ class AuthController extends Controller
             return response(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $user->createToken('apptoken')->plainTextToken;
+        $accessToken = $user->createToken('apptoken')->plainTextToken;
+        $refreshToken = $user->createToken('refreshToken')->plainTextToken;
+
+        User::where('id', $user->id)->update(['refresh_token' => $refreshToken]);
 
         return response([
             'user' => $user,
-            'token' => $token
+            'token' => $accessToken,
+            "message" => 'Login successful'
         ], 200);
     }
 

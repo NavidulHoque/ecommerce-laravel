@@ -11,8 +11,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'firstname',
-        'lastname',
+        'name',
         'email',
         'password',
         'role',
@@ -20,7 +19,7 @@ class User extends Authenticatable
         'profile_image',
         'otp',
         'otp_expires',
-        'refresh_token',
+        'refresh_token'
     ];
 
     protected $hidden = [
@@ -35,7 +34,7 @@ class User extends Authenticatable
     ];
 
     // ✅ Relationships
-    
+
     public function sentMessages()
     {
         return $this->hasMany(Message::class, 'sender_id');
