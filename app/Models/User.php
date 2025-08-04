@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     protected $fillable = [
         'name',
@@ -17,23 +19,18 @@ class User extends Authenticatable
         'role',
         'gender',
         'profile_image',
-        'otp',
-        'otp_expires',
         'refresh_token'
     ];
 
     protected $hidden = [
         'password',
-        'otp',
-        'otp_expires',
+        'remember_token',
         'refresh_token',
     ];
 
     protected $casts = [
         'password' => 'hashed'
     ];
-
-    // ✅ Relationships
 
     public function sentMessages()
     {
@@ -79,5 +76,15 @@ class User extends Authenticatable
     public function orderItems()
     {
         return $this->hasMany(OrderItems::class);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }

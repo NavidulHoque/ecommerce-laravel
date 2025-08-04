@@ -38,25 +38,42 @@ class AuthController extends Controller
         $user = User::where('email', $fields['email'])->first();
 
         if (!$user || !Hash::check($fields['password'], $user->password)) {
-            return response(['message' => 'Invalid credentials'], 401);
+            return response(['message' => 'Invalid credentials'], 400);
         }
 
-        $accessToken = $user->createToken('apptoken')->plainTextToken;
-        $refreshToken = $user->createToken('refreshToken')->plainTextToken;
+        // Generate access token
+        $accessTokenResult = $user->createToken('accessToken');
+        $accessToken = $accessTokenResult->accessToken;
+        $accessToken->expires_at = now()->addMinutes(4);
+        $accessToken->save();
+        $plainAccessToken = $accessTokenResult->plainTextToken;
 
-        User::where('id', $user->id)->update(['refresh_token' => $refreshToken]);
+        // Generate refresh token
+        $refreshTokenResult = $user->createToken('refreshToken');
+        $refreshToken = $refreshTokenResult->accessToken;
+        $refreshToken->expires_at = now()->addDays(10);
+        $refreshToken->save();
+        $plainRefreshToken = $refreshTokenResult->plainTextToken;
+
+        User::where('id', $user->id)->update(['refresh_token' => $plainRefreshToken]);
 
         return response([
             'user' => $user,
-            'token' => $accessToken,
+            'accessToken' => $plainAccessToken,
             "message" => 'Login successful'
         ], 200);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
-        return response(['message' => 'Logged out']);
+        $user = $request->user();
+
+        $user->tokens()->delete();
+        $user->refresh_token = null;
+        $user->save();
+
+        return response()->json(['message' => 'Logout successful'], 200);
     }
+
 }
 
