@@ -5,12 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -23,20 +22,29 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $hidden = [
-        'password',
-        'remember_token',
-        'refresh_token',
+        'password'
     ];
 
     protected $casts = [
         'password' => 'hashed'
     ];
 
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    // Relationships
+
     public function sentMessages()
     {
         return $this->hasMany(Message::class, 'sender_id');
     }
-
 
     public function receivedMessages()
     {
@@ -76,15 +84,5 @@ class User extends Authenticatable implements JWTSubject
     public function orderItems()
     {
         return $this->hasMany(OrderItems::class);
-    }
-
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return [];
     }
 }
