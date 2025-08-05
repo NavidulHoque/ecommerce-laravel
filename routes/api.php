@@ -24,7 +24,7 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
 });
 
 Route::prefix('categories')->controller(CategoriesController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-category','update');
         Route::delete('delete-category','destroy');
@@ -34,7 +34,7 @@ Route::prefix('categories')->controller(CategoriesController::class)->group(func
 });
 
 Route::prefix('subCategories')->controller(SubCategoriesController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-subCategory','update');
         Route::delete('delete-subCategory','destroy');
@@ -44,7 +44,7 @@ Route::prefix('subCategories')->controller(SubCategoriesController::class)->grou
 });
 
 Route::prefix('resources')->controller(ResourcesController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer|seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-resource','update');
         Route::delete('delete-resource','destroy');
@@ -54,7 +54,7 @@ Route::prefix('resources')->controller(ResourcesController::class)->group(functi
 });
 
 Route::prefix('orders')->controller(OrdersController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer|seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-order','update');
         Route::delete('delete-order','destroy');
@@ -64,7 +64,7 @@ Route::prefix('orders')->controller(OrdersController::class)->group(function () 
 });
 
 Route::prefix('order-items')->controller(OrderItemsController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer|seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-order-item','update');
         Route::delete('delete-order-item','destroy');
@@ -74,7 +74,7 @@ Route::prefix('order-items')->controller(OrderItemsController::class)->group(fun
 });
 
 Route::prefix('carts')->controller(CartsController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-cart','update');
         Route::delete('delete-cart','destroy');
@@ -84,7 +84,7 @@ Route::prefix('carts')->controller(CartsController::class)->group(function () {
 });
 
 Route::prefix('cart-items')->controller(CartItemsController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-cart-item','update');
         Route::delete('delete-cart-item','destroy');
@@ -94,7 +94,7 @@ Route::prefix('cart-items')->controller(CartItemsController::class)->group(funct
 });
 
 Route::prefix('promo-codes')->controller(PromoCodesController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-promo-code','update');
         Route::delete('delete-promo-code','destroy');
@@ -104,7 +104,7 @@ Route::prefix('promo-codes')->controller(PromoCodesController::class)->group(fun
 });
 
 Route::prefix('reviews')->controller(ReviewsController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-review','update');
         Route::delete('delete-review','destroy');
@@ -114,7 +114,7 @@ Route::prefix('reviews')->controller(ReviewsController::class)->group(function (
 });
 
 Route::prefix('messages')->controller(MessagesController::class)->group(function () {
-    Route::middleware('jwt.verify')->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer|seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-message','update');
         Route::delete('delete-message','destroy');
