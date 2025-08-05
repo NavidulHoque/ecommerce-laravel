@@ -26,6 +26,8 @@ class VerifyJWTToken
             if (!$user) {
                 return response()->json(['message' => 'User not found'], 404);
             }
+
+            $request["user"] = $user;
         }
 
         catch (TokenExpiredException $e) {

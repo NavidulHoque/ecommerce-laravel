@@ -2,16 +2,123 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartItemsController;
+use App\Http\Controllers\CartsController;
+use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\MessagesController;
+use App\Http\Controllers\OrderItemsController;
+use App\Http\Controllers\OrdersController;
+use App\Http\Controllers\PromoCodesController;
+use App\Http\Controllers\ResourcesController;
+use App\Http\Controllers\ReviewsController;
+use App\Http\Controllers\SubCategoriesController;
 
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/refreshToken', [AuthController::class, 'refreshToken']);
+Route::prefix('auth')->controller(AuthController::class)->group(function () {
+    Route::post('register', 'register');
+    Route::post('login', 'login');
+    Route::post('refreshToken', 'refreshToken');
 
-Route::middleware('jwt.verify')->group(function () {
-    Route::get('/auth/logout', [AuthController::class, 'logout']);
+    Route::middleware('jwt.verify')->group(function () {
+        Route::get('logout', 'logout');
+    });
 });
 
+Route::prefix('categories')->controller(CategoriesController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-category','update');
+        Route::delete('delete-category','destroy');
+        Route::get('get-all-categories','index');
+        Route::get('get-category/{id}','show');
+    });
+});
 
+Route::prefix('subCategories')->controller(SubCategoriesController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-subCategory','update');
+        Route::delete('delete-subCategory','destroy');
+        Route::get('get-all-subCategories','index');
+        Route::get('get-subCategory/{id}','show');
+    });
+});
 
+Route::prefix('resources')->controller(ResourcesController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-resource','update');
+        Route::delete('delete-resource','destroy');
+        Route::get('get-all-resources','index');
+        Route::get('get-resource/{id}','show');
+    });
+});
 
+Route::prefix('orders')->controller(OrdersController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-order','update');
+        Route::delete('delete-order','destroy');
+        Route::get('get-all-orders','index');
+        Route::get('get-order/{id}','show');
+    });
+});
 
+Route::prefix('order-items')->controller(OrderItemsController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-order-item','update');
+        Route::delete('delete-order-item','destroy');
+        Route::get('get-all-order-items','index');
+        Route::get('get-order-item/{id}','show');
+    });
+});
+
+Route::prefix('carts')->controller(CartsController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-cart','update');
+        Route::delete('delete-cart','destroy');
+        Route::get('get-all-carts','index');
+        Route::get('get-cart/{id}','show');
+    });
+});
+
+Route::prefix('cart-items')->controller(CartItemsController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-cart-item','update');
+        Route::delete('delete-cart-item','destroy');
+        Route::get('get-all-cart-items','index');
+        Route::get('get-cart-item/{id}','show');
+    });
+});
+
+Route::prefix('promo-codes')->controller(PromoCodesController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-promo-code','update');
+        Route::delete('delete-promo-code','destroy');
+        Route::get('get-all-promo-codes','index');
+        Route::get('get-promo-code/{id}','show');
+    });
+});
+
+Route::prefix('reviews')->controller(ReviewsController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-review','update');
+        Route::delete('delete-review','destroy');
+        Route::get('get-all-reviews','index');
+        Route::get('get-review/{id}','show');
+    });
+});
+
+Route::prefix('messages')->controller(MessagesController::class)->group(function () {
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('create', 'store');
+        Route::patch('update-message','update');
+        Route::delete('delete-message','destroy');
+        Route::get('get-all-messages','index');
+        Route::get('get-message/{id}','show');
+    });
+});
