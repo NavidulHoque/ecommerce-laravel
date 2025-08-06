@@ -19,7 +19,6 @@ class VerifyJWTToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-
         try {
             $user = JWTAuth::parseToken()->authenticate();
 
