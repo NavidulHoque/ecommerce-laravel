@@ -7,9 +7,10 @@ use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::all();
+        $user = $request->user;
+        $categories = Category::orderBy("created_at","desc")->paginate(10);
 
         return response()->json([
             'categories' => $categories
@@ -23,7 +24,7 @@ class CategoriesController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $fields["created_by"] = $request->user;
+        $fields["created_by"] = $request->user->id;
 
         Category::create($fields);
 

@@ -13,7 +13,7 @@ class CustomRoleMiddleware extends SpatieRoleMiddleware
 
         $roles = is_array($role) ? $role : explode('|', $role);
         foreach ($roles as $singleRole) {
-            if ($user->hasRole($singleRole, $guard)) {
+            if ($user->role === $singleRole) {
                 return $next($request);
             }
         }
