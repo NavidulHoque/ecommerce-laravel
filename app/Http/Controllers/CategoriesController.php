@@ -2,15 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CategoryQueryRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
 {
-    public function index(Request $request)
+    public function index(CategoryQueryRequest $request)
     {
-        $user = $request->user;
-        $categories = Category::orderBy("created_at","desc")->paginate(10);
+        $validated = $request->validated();
+
+        $query = Category::query();
+
+        if ($validated['name'] ?? false) {
+            $query->where('name', 'like', '%' . $validated['name'] . '%');
+        }
+
+        if ($validated['description'] ?? false) {
+            $query->where('description', 'like', '%' . $validated['description'] . '%');
+        }
+
+        $perPage = $validated['limit'] ?? 10;
+
+        $categories = $query->orderBy("created_at", "desc")->paginate($perPage);
 
         return response()->json([
             'categories' => $categories
