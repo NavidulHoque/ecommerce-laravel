@@ -2,27 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SubCategories\QuerySubCategoryRequest;
+use App\Http\Requests\SubCategories\StoreSubCategoryRequest;
+use App\Http\Requests\SubCategories\UpdateSubCategoryRequest;
 use App\Models\SubCategory;
-use Illuminate\Http\Request;
 
 class SubCategoriesController extends Controller
 {
-    public function index()
+    public function index(QuerySubCategoryRequest $request, $categoryId)
     {
-        $subCategories = SubCategory::all();
+        $fields = $request->validated();
+        $query = SubCategory::query();
+
+        // Filter by category ID
+        $query->where('category_id', $categoryId);
+
+        // Group OR conditions
+        if (!empty($fields['search'])) {
+
+            $query->where(function ($q) use ($fields) {
+                $q->orWhere('name', 'like', '%' . $fields['search'] . '%');
+                $q->orWhere('description', 'like', '%' . $fields['search'] . '%');
+            });
+        }
+
+        $perPage = $fields['limit'];
+
+        $subCategories = $query
+            ->select('id', 'name', 'description', "created_at", "updated_at")
+            ->orderBy("created_at", "desc")
+            ->paginate($perPage);
 
         return response()->json([
-            'subcategories' => $subCategories
+            'sub_categories' => $subCategories,
+            "message" => "Sub Categories retrieved successfully"
         ], 200);
     }
 
-    public function store(Request $request)
+    public function store(StoreSubCategoryRequest $request)
     {
-        $fields = $request->validate([
-            'name' => 'required|string|max:255|unique:sub_categories,name',
-            'description' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
-        ]);
+        $fields = $request->validated();
 
         $subCategories = SubCategory::create($fields);
 
@@ -32,24 +51,11 @@ class SubCategoriesController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function update(UpdateSubCategoryRequest $request, $id)
     {
-        $subCategories = SubCategory::find($id);
+        $fields = $request->validated();
 
-        return response()->json([
-            'subcategory' => $subCategories
-        ], 200);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $fields = $request->validate([
-            'name' => 'required|string|max:255|unique:sub_categories,name,' . $id,
-            'description' => 'nullable|string',
-            'category_id' => 'required|exists:categories,id',
-        ]);
-
-        $subCategories = SubCategory::find($id);
+        $subCategories = $this->findById(SubCategory::class, $id);
         if (!$subCategories) {
             return response()->json(['message' => 'Subcategory not found'], 404);
         }
@@ -64,7 +70,7 @@ class SubCategoriesController extends Controller
 
     public function destroy($id)
     {
-        $subCategories = SubCategory::find($id);
+        $subCategories = $this->findById(SubCategory::class, $id);
         if (!$subCategories) {
             return response()->json(['message' => 'Subcategory not found'], 404);
         }
