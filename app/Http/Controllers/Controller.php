@@ -15,4 +15,9 @@ abstract class Controller
     {
         return User::where($column, $operator)->first();
     }
+
+    protected function findById($model, $id)
+    {
+        return $model::find($id);
+    }
 }

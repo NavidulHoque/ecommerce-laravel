@@ -2,41 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CategoryQueryRequest;
+use App\Http\Requests\Categories\CategoryQueryRequest;
+use App\Http\Requests\Categories\StoreCategoryRequest;
+use App\Http\Requests\Categories\UpdateCategoryRequest;
 use App\Models\Category;
-use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
 {
     public function index(CategoryQueryRequest $request)
     {
-        $validated = $request->validated();
+        $fields = $request->validated();
 
         $query = Category::query();
 
-        if ($validated['name'] ?? false) {
-            $query->where('name', 'like', '%' . $validated['name'] . '%');
+        // Filter by user ID
+        $query->where('created_by', $request->user->id);
+
+        // Group OR conditions
+        if (!empty($fields['search'])) {
+
+            $query->where(function ($q) use ($fields) {
+                $q->orWhere('name', 'like', '%' . $fields['search'] . '%');
+                $q->orWhere('description', 'like', '%' . $fields['search'] . '%');
+            });
         }
 
-        if ($validated['description'] ?? false) {
-            $query->where('description', 'like', '%' . $validated['description'] . '%');
-        }
+        $perPage = $fields['limit'];
 
-        $perPage = $validated['limit'] ?? 10;
-
-        $categories = $query->orderBy("created_at", "desc")->paginate($perPage);
+        $categories = $query
+            ->with([
+                'creator' => function ($query) {
+                    $query->select('id', 'name', "email", "profile_image");
+                }
+            ])
+            ->orderBy("created_at", "desc")
+            ->paginate($perPage);
 
         return response()->json([
-            'categories' => $categories
+            'categories' => $categories,
+            "message" => "Categories retrieved successfully"
         ], 200);
     }
 
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $fields = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
-            'description' => 'nullable|string',
-        ]);
+        $fields = $request->validated();
 
         $fields["created_by"] = $request->user->id;
 
@@ -48,25 +58,19 @@ class CategoriesController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function update(UpdateCategoryRequest $request, $id)
     {
-        $category = Category::find($id);
+        $user = $request->user;
+        $fields = $request->validated();
 
-        return response()->json([
-            'category' => $category
-        ], 200);
-    }
+        $category = $this->findById(Category::class, $id);
 
-    public function update(Request $request, $id)
-    {
-        $fields = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $id,
-            'description' => 'nullable|string',
-        ]);
-
-        $category = Category::find($id);
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        else if ($category->created_by !== $user->id) {
+            return response()->json(['message' => 'You are unauthorized to update this category'], 403);
         }
 
         $category->update($fields);

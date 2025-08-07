@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Categories;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class BasePaginatedRequest extends FormRequest
+class BaseCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,8 +14,7 @@ class BasePaginatedRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'page' => 'required|integer|min:1',
-            'limit' => 'required|integer|min:1|max:100',
+            'description' => 'nullable|string',
         ];
     }
 }
