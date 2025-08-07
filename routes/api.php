@@ -27,7 +27,7 @@ Route::prefix('categories')->controller(CategoriesController::class)->group(func
     Route::middleware(['jwt.verify', 'role:seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-category/{id}','update');
-        Route::delete('delete-category','destroy');
+        Route::delete('delete-category/{id}','destroy');
         Route::get('get-all-categories','index');
     });
 });

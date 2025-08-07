@@ -6,6 +6,7 @@ use App\Http\Requests\Categories\CategoryQueryRequest;
 use App\Http\Requests\Categories\StoreCategoryRequest;
 use App\Http\Requests\Categories\UpdateCategoryRequest;
 use App\Models\Category;
+use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
 {
@@ -81,11 +82,17 @@ class CategoriesController extends Controller
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $category = Category::find($id);
+        $user = $request->user;
+        $category = $this->findById(Category::class, $id);
+
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
+        }
+
+        else if ($category->created_by !== $user->id) {
+            return response()->json(['message' => 'You are unauthorized to update this category'], 403);
         }
 
         $category->delete();
