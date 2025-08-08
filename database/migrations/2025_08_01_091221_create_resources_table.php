@@ -17,7 +17,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->decimal('discount_price', 10, 2)->default(0);
-            $table->decimal('resultant_price', 10, 2)->nullable();
             $table->integer('quantity');
             $table->string('format_url');
             $table->string('format_type');

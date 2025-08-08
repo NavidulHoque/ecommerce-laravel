@@ -2,62 +2,85 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Carts\StoreCartRequest;
+use App\Http\Requests\Carts\UpdateCartRequest;
 use App\Models\Cart;
+use App\Models\CartItems;
 use Illuminate\Http\Request;
 
 class CartsController extends Controller
 {
-    public function index()
+    public function store(StoreCartRequest $request)
     {
-        $cart = Cart::all();
+        $user = $request->user;
+        $cartItemFields = $request->validated();
+
+        // Find or create cart
+        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+
+        $cartItemFields["cart_id"] = $cart->id;
+
+        // Then create the cart item
+        CartItems::Create($cartItemFields);
 
         return response()->json([
-            'data' => $cart
-        ], 200);
-    }
-
-    public function store(Request $request)
-    {
-        $fields = $request->validate([
-            'user_id' => 'required|integer',
-            'items' => 'required|array',
-        ]);
-
-        $cart = Cart::create($fields);
-
-        return response()->json([
-            'data' => $cart
+            'message' => 'Cart created successfully'
         ], 201);
     }
 
-    public function show($id)
+    public function show(Request $request)
     {
-        $cart = Cart::findOrFail($id);
+        $user = $request->user;
+        $cart = Cart::with('items.resource')->where('user_id', $user->id)->first();
 
         return response()->json([
-            'data' => $cart
+            'data' => $cart,
+            "message" => 'Cart retrieved successfully'
         ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateCartRequest $request, $id)
     {
-        $fields = $request->validate([
-            'user_id' => 'sometimes|required|integer',
-            'items' => 'sometimes|required|array',
-        ]);
+        $fields = $request->validated();
 
-        $cart = Cart::findOrFail($id);
-        $cart->update($fields);
+        $item = $this->findById(CartItems::class, $id);
+
+        if (!$item) {
+            return response()->json([
+                'message' => 'Cart item not found'
+            ], 404);
+        }
+
+        $item->update($fields);
 
         return response()->json([
-            'data' => $cart
+            "message" => "Cart item updated successfully"
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy($cart_item_id, $cart_id)
     {
-        $cart = Cart::findOrFail($id);
-        $cart->delete();
+        if ($cart_id) {
+            $cart = $this->findById(Cart::class, $cart_id);
+
+            if (!$cart) {
+                return response()->json([
+                    'message' => 'Cart not found'
+                ], 404);
+            }
+
+            $cart->delete();
+        }
+
+        $cart_item = $this->findById(CartItems::class, $cart_item_id);
+
+        if (!$cart_item) {
+            return response()->json([
+                'message' => 'Cart item not found'
+            ], 404);
+        }
+
+        $cart_item->delete();
 
         return response()->json([
             'message' => 'Cart deleted successfully'

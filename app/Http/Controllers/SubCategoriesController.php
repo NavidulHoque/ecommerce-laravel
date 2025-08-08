@@ -56,6 +56,7 @@ class SubCategoriesController extends Controller
         $fields = $request->validated();
 
         $subCategories = $this->findById(SubCategory::class, $id);
+        
         if (!$subCategories) {
             return response()->json(['message' => 'Subcategory not found'], 404);
         }

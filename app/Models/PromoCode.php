@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PromoCode extends Model
 {
     protected $fillable = [
+        "code",
         'discount',
         'start_date',
         'expiry_date',

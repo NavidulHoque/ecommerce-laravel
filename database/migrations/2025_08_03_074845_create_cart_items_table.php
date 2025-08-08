@@ -5,9 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('cart_items', function (Blueprint $table) {
@@ -15,7 +13,6 @@ return new class extends Migration {
             $table->foreignId('cart_id')->constrained('carts')->onDelete('cascade');
             $table->foreignId('resource_id')->constrained('resources')->onDelete('cascade');
             $table->integer('quantity')->default(1);
-            $table->decimal('price', 10, 2);
             $table->timestamps();
         });
     }

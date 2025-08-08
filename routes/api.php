@@ -74,20 +74,9 @@ Route::prefix('order-items')->controller(OrderItemsController::class)->group(fun
 Route::prefix('carts')->controller(CartsController::class)->group(function () {
     Route::middleware(['jwt.verify', 'role:buyer'])->group(function () {
         Route::post('create', 'store');
+        Route::get('get-cart','show');
         Route::patch('update-cart','update');
-        Route::delete('delete-cart','destroy');
-        Route::get('get-all-carts','index');
-        Route::get('get-cart/{id}','show');
-    });
-});
-
-Route::prefix('cart-items')->controller(CartItemsController::class)->group(function () {
-    Route::middleware(['jwt.verify', 'role:buyer'])->group(function () {
-        Route::post('create', 'store');
-        Route::patch('update-cart-item','update');
-        Route::delete('delete-cart-item','destroy');
-        Route::get('get-all-cart-items','index');
-        Route::get('get-cart-item/{id}','show');
+        Route::delete('delete-cart/{cart_item_id}/{cart_id?}','destroy');
     });
 });
 

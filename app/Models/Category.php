@@ -8,7 +8,8 @@ class Category extends Model
 {
     protected $fillable = [
         'name',
-        'description'
+        'description',
+        "created_by"
     ];
 
     public function subcategories()
