@@ -2,24 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PromoCodeRequest;
 use App\Models\PromoCode;
 use Illuminate\Http\Request;
 
 class PromoCodesController extends Controller
 {
-    public function index()
+    public function index(PromoCodeRequest $request)
     {
-        $codes = PromoCode::all();
-        return response()->json($codes, 200);
+        $fields = $request->validated();
+        $query = PromoCode::query();
+
+        // Group OR conditions
+        if (!empty($fields['status'])) {
+
+            $query->where(function ($q) use ($fields) {
+                $q->orWhere('status', 'like', '%' . $fields['status'] . '%');
+            });
+        }
+
+        $perPage = $fields['limit'];
+
+        $prmoCodes = $query
+            ->orderBy("created_at", "desc")
+            ->paginate($perPage);
+
+        return response()->json([
+            'sub_categories' => $prmoCodes,
+            "message" => "Promo Codes retrieved successfully"
+        ], 200);
+
     }
 
-    public function store(Request $request)
+    public function store(PromoCodeRequest $request)
     {
-        $fields = $request->validate([
-            'code' => 'required|string|max:255',
-            'discount' => 'required|numeric',
-            'expires_at' => 'nullable|date',
-        ]);
+        $fields = $request->validated();
 
         PromoCode::create($fields);
 
