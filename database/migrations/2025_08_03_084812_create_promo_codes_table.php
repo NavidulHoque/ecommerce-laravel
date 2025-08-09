@@ -12,8 +12,8 @@ return new class extends Migration {
             $table->id();
             $table->string('code', 6)->unique();
             $table->integer('discount');
-            $table->date('start_date');
-            $table->date('expiry_date');
+            $table->datetime('start_date');
+            $table->datetime('expiry_date');
             $table->enum('status', ['Active', 'Expired'])->default('Active');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();

@@ -83,10 +83,9 @@ Route::prefix('carts')->controller(CartsController::class)->group(function () {
 Route::prefix('promo-codes')->controller(PromoCodesController::class)->group(function () {
     Route::middleware(['jwt.verify', 'role:seller|admin'])->group(function () {
         Route::post('create', 'store');
-        Route::patch('update-promo-code','update');
+        Route::patch('update-promo-code/{id}','update');
         Route::delete('delete-promo-code','destroy');
         Route::get('get-all-promo-codes','index');
-        Route::get('get-promo-code/{id}','show');
     });
 });
 
@@ -95,8 +94,7 @@ Route::prefix('reviews')->controller(ReviewsController::class)->group(function (
         Route::post('create', 'store');
         Route::patch('update-review','update');
         Route::delete('delete-review','destroy');
-        Route::get('get-all-reviews','index');
-        Route::get('get-review/{id}','show');
+        Route::get('get-all-reviews/{resource_id}','index');
     });
 });
 
@@ -106,6 +104,5 @@ Route::prefix('messages')->controller(MessagesController::class)->group(function
         Route::patch('update-message','update');
         Route::delete('delete-message','destroy');
         Route::get('get-all-messages','index');
-        Route::get('get-message/{id}','show');
     });
 });

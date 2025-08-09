@@ -2,19 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReviewRequest;
 use App\Models\Review;
-use Illuminate\Http\Request;
 
 class ReviewsController extends Controller
 {
-    public function store(Request $request)
+    public function store(ReviewRequest $request)
     {
-        $field = $request->validate([
-            'product_id' => 'required|integer',
-            'user_id' => 'required|integer',
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:500',
-        ]);
+        $field = $request->validated();
+        $field['user_id'] = $request->user->id;
 
         Review::create($field);
 
@@ -24,23 +20,39 @@ class ReviewsController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function index(ReviewRequest $request, $resource_id)
     {
-        $review = Review::findOrFail($id);
+        $fields = $request->validated();
+        $limit = $fields['limit'];
 
-        return response()->json($review, 200);
+        $reviews = Review::where('resource_id', $resource_id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($limit);
+
+        return response()->json([
+            'data' => $reviews,
+            "message" => 'Reviews retrieved successfully'
+        ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(ReviewRequest $request, $id)
     {
-        $review = Review::findOrFail($id);
+        $user = $request->user;
+        $review = $this->findById(Review::class, $id);
 
-        $field = $request->validate([
-            'product_id' => 'required|integer',
-            'user_id' => 'required|integer',
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:500',
-        ]);
+        if (!$review) {
+            return response()->json([
+                'message' => 'Review not found',
+            ], 404);
+        }
+
+        else if ($user->id != $review->user_id) {
+            return response()->json([
+                'message' => 'You are not authorized to update this review',
+            ], 403);
+        }
+
+        $field = $request->validated();
 
         $review->update($field);
 
@@ -48,25 +60,22 @@ class ReviewsController extends Controller
             'message' => 'Review updated successfully',
             'review' => $field,
         ], 200);
-
     }
 
     public function destroy($id)
     {
-        $review = Review::findOrFail($id);
+        $review = $this->findById(Review::class, $id);
+
+        if (!$review) {
+            return response()->json([
+                'message' => 'Review not found',
+            ], 404);
+        }
+
         $review->delete();
 
         return response()->json([
             'message' => 'Review deleted successfully',
-        ], 200);
-    }
-
-    public function index()
-    {
-        $reviews = Review::orderBy('id','desc')->paginate(10);
-
-        return response()->json([
-            'data' => $reviews
         ], 200);
     }
 }

@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MessageRequest;
 use App\Models\Message;
 use Illuminate\Http\Request;
 
 class MessagesController extends Controller
 {
-    public function store(Request $request)
+    public function store(MessageRequest $request)
     {
-        $field = $request->validate([
-            'content' => 'required|string|max:255',
-            'user_id' => 'required|integer|exists:users,id',
-        ]);
+        $field = $request->validated();
+        $field['sender_id'] = $request->user->id;
 
         Message::create($field);
 
@@ -22,8 +21,9 @@ class MessagesController extends Controller
         ], 201);
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $field['sender_id'] = $request->user->id;
         $messages = Message::orderBy('created_at','desc')->paginate(10);
 
         return response()->json([
@@ -31,16 +31,7 @@ class MessagesController extends Controller
         ], 200);
     }
 
-    public function show($id)
-    {
-        $message = Message::find($id);
-
-        return response()->json([
-            'data' => $message
-        ], 200);
-    }
-
-    public function update(Request $request, $id)
+    public function update(MessageRequest $request, $id)
     {
         $field = $request->validate([
             'content' => 'sometimes|required|string|max:255',

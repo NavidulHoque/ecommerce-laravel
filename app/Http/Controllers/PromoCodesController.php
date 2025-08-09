@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PromoCodeRequest;
 use App\Models\PromoCode;
-use Illuminate\Http\Request;
 
 class PromoCodesController extends Controller
 {
@@ -13,7 +12,7 @@ class PromoCodesController extends Controller
         $fields = $request->validated();
         $query = PromoCode::query();
 
-        // Group OR conditions
+        // Search by status
         if (!empty($fields['status'])) {
 
             $query->where(function ($q) use ($fields) {
@@ -21,22 +20,46 @@ class PromoCodesController extends Controller
             });
         }
 
-        $perPage = $fields['limit'];
+        // Search by creator name
+        if (!empty($fields['search'])) {
+            $query->whereHas('creator', function ($q) use ($fields) {
+                $q->where('name', 'like', '%' . $fields['search'] . '%');
+            });
+        }
 
-        $prmoCodes = $query
+        $per_page = $fields['limit'];
+
+        $promo_codes = $query
+            ->with([
+                'creator' => function ($query) {
+                    $query->select('id', 'name', "email", "profile_image");
+                }
+            ])
             ->orderBy("created_at", "desc")
-            ->paginate($perPage);
+            ->paginate($per_page);
 
         return response()->json([
-            'sub_categories' => $prmoCodes,
+            'promo_codes' => $promo_codes,
             "message" => "Promo Codes retrieved successfully"
         ], 200);
-
     }
 
     public function store(PromoCodeRequest $request)
     {
         $fields = $request->validated();
+        $user = $request->user;
+
+        $code = $this->generateCode();
+        $fields['code'] = $code;
+        $fields['created_by'] = $user->id;
+
+        if (!empty($fields['start_date'])) {
+            $fields['start_date'] = $this->formatDateTime($fields['start_date']);
+        }
+
+        if (!empty($fields['expiry_date'])) {
+            $fields['expiry_date'] = $this->formatDateTime($fields['expiry_date']);
+        }
 
         PromoCode::create($fields);
 
@@ -46,42 +69,31 @@ class PromoCodesController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function update(PromoCodeRequest $request, $id)
     {
-        $promoCode = PromoCode::find($id);
+        $fields = $request->validated();
+        $user = $request->user;
+
+        $promoCode = $this->findById(PromoCode::class, $id);
 
         if (!$promoCode) {
             return response()->json(['message' => 'Promo code not found'], 404);
         }
 
-        return response()->json($promoCode, 200);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $fields = $request->validate([
-            'code' => 'required|string|max:255',
-            'discount' => 'required|numeric',
-            'expires_at' => 'nullable|date',
-        ]);
-
-        $promoCode = PromoCode::find($id);
-
-        if (!$promoCode) {
-            return response()->json(['message' => 'Promo code not found'], 404);
+        else if ($user->id !== $promoCode->created_by) {
+            return response()->json(['message' => 'You are unauthorized to update this promo code'], 403);
         }
 
         $promoCode->update($fields);
 
         return response()->json([
-            'message' => 'Promo code updated successfully',
-            'promo_code' => $fields
+            'message' => 'Promo code updated successfully'
         ], 200);
     }
 
     public function destroy($id)
     {
-        $promoCode = PromoCode::find($id);
+        $promoCode = $this->findById(PromoCode::class, $id);
 
         if (!$promoCode) {
             return response()->json(['message' => 'Promo code not found'], 404);
@@ -90,5 +102,17 @@ class PromoCodesController extends Controller
         $promoCode->delete();
 
         return response()->json(['message' => 'Promo code deleted successfully'], 200);
+    }
+
+    protected function generateCode()
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $result = '';
+
+        for ($i = 0; $i < 6; $i++) {
+            $result .= $characters[rand(0, strlen($characters) - 1)];
+        }
+
+        return $result;
     }
 }

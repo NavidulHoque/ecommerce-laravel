@@ -2,43 +2,60 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class PromoCodeRequest extends FormRequest
+class PromoCodeRequest extends BasePaginatedRequest
 {
-    public function authorize(): bool
+    public function prepareForValidation()
     {
-        return true;
+        // convert status to lowercase for consistency
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => strtolower($this->input('status')),
+            ]);
+        }
     }
 
-    public function rules()
+    public function rules(): array
     {
-        $rules = [
+        $promoRules = [
             'discount'    => 'integer|min:1|max:99',
             'start_date'  => 'date|after_or_equal:today',
             'expiry_date' => 'date|after:start_date',
-            'status'      => 'in:Active,Expired',
+            'status'      => 'in:active,expired',
         ];
 
-        // For POST (store) → make them required
         if ($this->isMethod('post')) {
-            foreach ($rules as $field => $rule) {
-                $rules[$field] = 'required|' . $rule;
+            foreach ($promoRules as $field => $rule) {
+
+                if ($field !== 'status') {
+                    $promoRules[$field] = 'required|' . $rule;
+                }
             }
+
+            $rules = $promoRules;
         }
 
-        // For POST (store) → make them required
-        if ($this->isMethod('get')) {
-            foreach ($rules as $field => $rule) {
-                $rules[$field] = 'nullable|' . $rule;
+        else if ($this->isMethod('get')) {
+
+            $paginationRules = parent::rules();
+
+            foreach ($promoRules as $field => $rule) {
+                if ($field === 'status') {
+                    $promoRules[$field] = 'nullable|' . $rule;
+                }
             }
+
+            $promoRules['search'] = 'nullable|string|max:255';
+
+            $rules = array_merge($promoRules, $paginationRules);
         }
 
-        // For PATCH (update) → keep them as optional
-        if ($this->isMethod('patch') || $this->isMethod('put')) {
-            foreach ($rules as $field => $rule) {
-                $rules[$field] = 'sometimes|' . $rule;
+        else if ($this->isMethod('patch')) {
+            
+            foreach ($promoRules as $field => $rule) {
+                $promoRules[$field] = 'sometimes|' . $rule;
             }
+
+            $rules = $promoRules;
         }
 
         return $rules;
