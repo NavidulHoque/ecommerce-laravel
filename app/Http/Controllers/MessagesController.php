@@ -23,22 +23,31 @@ class MessagesController extends Controller
 
     public function index(Request $request)
     {
-        $field['sender_id'] = $request->user->id;
-        $messages = Message::orderBy('created_at','desc')->paginate(10);
+        $sender_id = $request->user->id;
+
+        $messages = Message::where(function ($query) use ($sender_id) {
+            $query->where('sender_id', $sender_id)
+                ->orWhere('receiver_id', $sender_id);
+        })
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->limit);
 
         return response()->json([
-            'data' => $messages
+            'data' => $messages,
+            "message" => "Messages fetched successfully"
         ], 200);
     }
 
     public function update(MessageRequest $request, $id)
     {
-        $field = $request->validate([
-            'content' => 'sometimes|required|string|max:255',
-            'user_id' => 'sometimes|required|integer|exists:users,id',
-        ]);
+        $field = $request->validated();
 
-        $message = Message::findOrFail($id);
+        $message = $this->findById(Message::class, $id);
+
+        if (!$message) {
+            return response()->json(['message' => 'Message not found'], 404);
+        }
+
         $message->update($field);
 
         return response()->json([
@@ -49,7 +58,13 @@ class MessagesController extends Controller
 
     public function destroy($id)
     {
-        Message::destroy($id);
+        $message = $this->findById(Message::class, $id);
+
+        if (!$message) {
+            return response()->json(['message' => 'Message not found'], 404);
+        }
+
+        $message->delete();
 
         return response()->json([
             'message' => 'Message deleted successfully'
