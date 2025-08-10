@@ -103,16 +103,4 @@ class PromoCodesController extends Controller
 
         return response()->json(['message' => 'Promo code deleted successfully'], 200);
     }
-
-    protected function generateCode()
-    {
-        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $result = '';
-
-        for ($i = 0; $i < 6; $i++) {
-            $result .= $characters[rand(0, strlen($characters) - 1)];
-        }
-
-        return $result;
-    }
 }

@@ -26,4 +26,16 @@ abstract class Controller
     {
         return Carbon::parse(time: $datetime)->format('Y-m-d H:i:s');;
     }
+
+    protected function generateCode()
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $result = '';
+
+        for ($i = 0; $i < 6; $i++) {
+            $result .= $characters[rand(0, strlen($characters) - 1)];
+        }
+
+        return $result;
+    }
 }

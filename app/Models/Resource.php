@@ -6,16 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Resource extends Model
 {
-
     protected $fillable = [
         'title',
         'description',
         'price',
         'discount_price',
-        'resultant_price',
         'quantity',
-        'format_url',
-        'format_type',
         'category_id',
         'sub_category_id',
         'created_by',
@@ -23,6 +19,10 @@ class Resource extends Model
         'product_id'
     ];
 
+    public function resource_files()
+    {
+        return $this->hasMany(ResourceFiles::class);
+    }
 
     public function reviews()
     {
