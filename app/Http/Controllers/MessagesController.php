@@ -21,16 +21,19 @@ class MessagesController extends Controller
         ], 201);
     }
 
-    public function index(Request $request)
+    public function index(Request $request, $receiver_id)
     {
         $sender_id = $request->user->id;
 
-        $messages = Message::where(function ($query) use ($sender_id) {
+        $messages = Message::where(function ($query) use ($sender_id, $receiver_id) {
             $query->where('sender_id', $sender_id)
-                ->orWhere('receiver_id', $sender_id);
+                ->where('receiver_id', $receiver_id);
         })
-            ->orderBy('created_at', 'desc')
-            ->paginate($request->limit);
+            ->orWhere(function ($query) use ($sender_id, $receiver_id) {
+                $query->where('sender_id', $receiver_id)
+                    ->where('receiver_id', $sender_id);
+            })
+            ->orderBy('created_at', 'desc');
 
         return response()->json([
             'data' => $messages,
@@ -41,11 +44,20 @@ class MessagesController extends Controller
     public function update(MessageRequest $request, $id)
     {
         $field = $request->validated();
+        $user = $request->user;
 
         $message = $this->findById(Message::class, $id);
 
         if (!$message) {
             return response()->json(['message' => 'Message not found'], 404);
+        }
+
+        else if ($field["content"] && $message->sender_id !== $user->id) {
+            return response()->json(['message' => 'You are not authorized to update this message'], 403);
+        }
+
+        else if ($field["isRead"] && $message->receiver_id !== $user->id) {
+            return response()->json(['message' => 'You are not authorized to update this message'], 403);
         }
 
         $message->update($field);
@@ -56,12 +68,17 @@ class MessagesController extends Controller
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $message = $this->findById(Message::class, $id);
+        $user = $request->user;
 
         if (!$message) {
             return response()->json(['message' => 'Message not found'], 404);
+        }
+
+        else if ($message->sender_id !== $user->id) {
+            return response()->json(['message' => 'You are not authorized to delete this message'], 403);
         }
 
         $message->delete();

@@ -16,7 +16,7 @@ class MessageRequest extends FormRequest
         $messageRules = [
             'content'     => 'string',
             'receiver_id' => 'integer|exists:users,id',
-            'isRead'      => 'boolean',
+            'isRead'      => 'boolean'
         ];
 
         if ($this->isMethod('post')) {

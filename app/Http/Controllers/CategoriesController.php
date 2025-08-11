@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Categories\CategoryQueryRequest;
-use App\Http\Requests\Categories\StoreCategoryRequest;
-use App\Http\Requests\Categories\UpdateCategoryRequest;
+use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
 {
-    public function index(CategoryQueryRequest $request)
+    public function index(CategoryRequest $request)
     {
         $fields = $request->validated();
 
@@ -45,7 +43,7 @@ class CategoriesController extends Controller
         ], 200);
     }
 
-    public function store(StoreCategoryRequest $request)
+    public function store(CategoryRequest $request)
     {
         $fields = $request->validated();
 
@@ -59,7 +57,7 @@ class CategoriesController extends Controller
         ], 201);
     }
 
-    public function update(UpdateCategoryRequest $request, $id)
+    public function update(CategoryRequest $request, $id)
     {
         $user = $request->user;
         $fields = $request->validated();

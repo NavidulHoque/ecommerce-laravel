@@ -39,6 +39,7 @@ class ReviewsController extends Controller
     {
         $user = $request->user;
         $review = $this->findById(Review::class, $id);
+        $field = $request->validated();
 
         if (!$review) {
             return response()->json([
@@ -51,8 +52,6 @@ class ReviewsController extends Controller
                 'message' => 'You are not authorized to update this review',
             ], 403);
         }
-
-        $field = $request->validated();
 
         $review->update($field);
 

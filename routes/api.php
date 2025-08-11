@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CartItemsController;
 use App\Http\Controllers\CartsController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\MessagesController;
@@ -102,6 +101,6 @@ Route::prefix('messages')->controller(MessagesController::class)->group(function
         Route::post('create', 'store');
         Route::patch('update-message','update');
         Route::delete('delete-message','destroy');
-        Route::get('get-all-messages','index');
+        Route::get('get-all-messages/{receiver_id}','index');
     });
 });
