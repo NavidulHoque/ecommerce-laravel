@@ -5,13 +5,56 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ResourcesRequest;
 use App\Models\Resource;
 use App\Models\ResourceFiles;
-use Illuminate\Http\Request;
 
 class ResourcesController extends Controller
 {
-    public function index()
+    public function index(ResourcesRequest $request)
     {
-        $resources = Resource::all();
+        $fields = $request->validated();
+
+        $query = Resource::query();
+
+        // Apply filters with AND logic
+        if (!empty($fields['category_id'])) {
+            $query->where('category_id', $fields['category_id']);
+        }
+
+        if (!empty($fields['sub_category_id'])) {
+            $query->where('sub_category_id', $fields['sub_category_id']);
+        }
+
+        if (!empty($fields['created_by'])) {
+            $query->where('created_by', $fields['created_by']);
+        }
+
+        if (!empty($fields['status'])) {
+            $query->where('status', $fields['status']);
+        }
+
+        // Group OR conditions
+        if (!empty($fields['search'])) {
+
+            $search = '%' . $fields['search'] . '%';
+
+            $query->where(function ($q) use ($search) {
+                $q->orWhere('title', 'like', $search);
+                $q->orWhere('description', 'like', $search);
+                $q->orWhereHas('creator', function ($q) use ($search) {
+                    $q->where('name', 'like', $search);
+                });
+            });
+        }
+
+        $limit = $fields['limit'];
+
+        $resources = $query
+            ->with([
+                'creator' => function ($query) {
+                    $query->select('id', 'name', "email", "profile_image");
+                }
+            ])
+            ->orderBy("created_at", "desc")
+            ->paginate($limit);
 
         return response()->json([
             'data' => $resources,
@@ -46,7 +89,7 @@ class ResourcesController extends Controller
                 // Save file info in DB
                 ResourceFiles::create([
                     'resource_id' => $resource->id,
-                    'file_url' => 'storage/uploads/' . $filename, // relative URL
+                    'file_url' => 'storage/uploads/' . $filename,
                     'file_type' => $file->getClientOriginalExtension(),
                 ]);
             }
@@ -57,21 +100,16 @@ class ResourcesController extends Controller
         ]);
     }
 
-    public function show($id)
-    {
-        $resource = Resource::findOrFail($id);
-
-        return response()->json([
-            'data' => $resource,
-            'message' => 'Resource details'
-        ]);
-    }
-
     public function update(ResourcesRequest $request, $id)
     {
         $fields = $request->validated();
 
-        $resource = Resource::findOrFail($id);
+        $resource = $this->findById(Resource::class, $id);
+
+        if (!$resource) {
+            return response()->json(['message' => 'Resource not found'], 404);
+        }
+
         $resource->update($fields);
 
         return response()->json([
@@ -82,7 +120,12 @@ class ResourcesController extends Controller
 
     public function destroy($id)
     {
-        $resource = Resource::findOrFail($id);
+        $resource = $this->findById(Resource::class, $id);
+
+        if (!$resource) {
+            return response()->json(['message' => 'Resource not found'], 404);
+        }
+
         $resource->delete();
 
         return response()->json([

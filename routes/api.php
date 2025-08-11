@@ -47,7 +47,6 @@ Route::prefix('resources')->controller(ResourcesController::class)->group(functi
         Route::patch('update-resource','update');
         Route::delete('delete-resource','destroy');
         Route::get('get-all-resources','index');
-        Route::get('get-resource/{id}','show');
     });
 });
 

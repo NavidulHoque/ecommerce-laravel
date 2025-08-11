@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Carts\StoreCartRequest;
-use App\Http\Requests\Carts\UpdateCartRequest;
+use App\Http\Requests\CartRequest;
 use App\Models\Cart;
 use App\Models\CartItems;
 use Illuminate\Http\Request;
 
 class CartsController extends Controller
 {
-    public function store(StoreCartRequest $request)
+    public function store(CartRequest $request)
     {
         $user = $request->user;
         $cartItemFields = $request->validated();
@@ -28,18 +27,28 @@ class CartsController extends Controller
         ], 201);
     }
 
-    public function show(Request $request)
+    public function show(CartRequest $request)
     {
         $user = $request->user;
-        $cart = Cart::with('items.resource')->where('user_id', $user->id)->first();
+        $fields = $request->validated();
+        $cart = Cart::where('user_id', $user->id)->first();
+
+        $cartItems = CartItems::where('cart_id', $cart->id)
+            ->with([
+                'resource' => function ($query) {
+                    $query->select('id', 'title', "price", "discount_price");
+                }
+            ])
+            ->orderBy("created_at", "desc")
+            ->paginate($fields["limit"]);
 
         return response()->json([
-            'data' => $cart,
+            'data' => $cartItems,
             "message" => 'Cart retrieved successfully'
         ], 200);
     }
 
-    public function update(UpdateCartRequest $request, $id)
+    public function update(CartRequest $request, $id)
     {
         $fields = $request->validated();
 

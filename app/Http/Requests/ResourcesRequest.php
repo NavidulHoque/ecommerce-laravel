@@ -24,6 +24,7 @@ class ResourcesRequest extends BasePaginatedRequest
             'quantity' => 'integer|min:1',
             'category_id' => 'integer|exists:categories,id',
             'sub_category_id' => 'integer|exists:sub_categories,id',
+            "created_by" => 'integer|exists:users,id',
             'status' => 'in:pending,approved,rejected',
             'files.*' => 'required|file|mimes:jpeg,jpg,png,gif,bmp,svg,mp4,mov,avi,mkv,pdf,doc,docx|max:20480'
         ];
@@ -36,7 +37,7 @@ class ResourcesRequest extends BasePaginatedRequest
                     $resourceRules[$field] = 'nullable|' . $rule;
                 }
 
-                else if ($field !== "status") {
+                else if ($field !== "status" && $field !== "created_by") {
                     $resourceRules[$field] = 'required|' . $rule;
                 }
             }
@@ -47,7 +48,17 @@ class ResourcesRequest extends BasePaginatedRequest
 
             $paginationRules = parent::rules();
 
-            $resourceRules["status"] = 'nullable|' . $resourceRules["status"];
+            foreach ($resourceRules as $field => $rule) {
+
+                if ($field === "created_by" || $field === "status") {
+                    $resourceRules[$field] = 'nullable|' . $rule;
+                }
+
+                else if($field === "category_id" || $field === "sub_category_id"){
+                    $resourceRules[$field] = 'required|' . $rule;
+                }
+            }
+
             $resourceRules["search"] = 'nullable|string|max:255';
 
             $rules = array_merge($paginationRules, $resourceRules);
@@ -57,7 +68,7 @@ class ResourcesRequest extends BasePaginatedRequest
 
             foreach ($resourceRules as $field => $rule) {
 
-                if ($field !== "category_id" && $field !== "sub_category_id" && $field !== "files.*" && $field !== "files") {
+                if ($field !== "quantity" && $field !== "category_id" && $field !== "sub_category_id" && $field !== "files.*" && $field !== "created_by") {
                     $resourceRules[$field] = 'sometimes|' . $rule;
                 }
             }

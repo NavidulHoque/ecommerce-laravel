@@ -39,7 +39,7 @@ class PromoCodesController extends Controller
             ->paginate($per_page);
 
         return response()->json([
-            'promo_codes' => $promo_codes,
+            'data' => $promo_codes,
             "message" => "Promo Codes retrieved successfully"
         ], 200);
     }

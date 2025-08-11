@@ -13,9 +13,7 @@ class CartRequest extends BasePaginatedRequest
 
         if ($this->isMethod('post')) {
 
-            foreach ($cartRules as $field => $rule) {
-                $cartRules[$field] = 'required|' . $rule;
-            }
+            $cartRules['resource_id'] = 'required|' . $cartRules['resource_id'];
 
             $rules = $cartRules;
         }
