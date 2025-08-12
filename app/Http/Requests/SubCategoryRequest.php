@@ -11,7 +11,7 @@ class SubCategoryRequest extends BasePaginatedRequest
         $categoryRules = [
             'name'        => 'string|max:255|unique:sub_categories,name',
             'description' => 'string',
-            'category_id'=> 'exists:categories,id',
+            'category_id' => 'exists:categories,id',
         ];
 
         if ($this->isMethod('post')) {
