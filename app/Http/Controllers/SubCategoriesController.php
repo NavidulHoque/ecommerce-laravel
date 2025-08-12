@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SubCategories\QuerySubCategoryRequest;
-use App\Http\Requests\SubCategories\StoreSubCategoryRequest;
-use App\Http\Requests\SubCategories\UpdateSubCategoryRequest;
+use App\Http\Requests\SubCategoryRequest;
 use App\Models\SubCategory;
 
 class SubCategoriesController extends Controller
 {
-    public function index(QuerySubCategoryRequest $request, $categoryId)
+    public function index(SubCategoryRequest $request, $categoryId)
     {
         $fields = $request->validated();
         $query = SubCategory::query();
@@ -39,7 +37,7 @@ class SubCategoriesController extends Controller
         ], 200);
     }
 
-    public function store(StoreSubCategoryRequest $request)
+    public function store(SubCategoryRequest $request)
     {
         $fields = $request->validated();
 
@@ -51,12 +49,12 @@ class SubCategoriesController extends Controller
         ], 201);
     }
 
-    public function update(UpdateSubCategoryRequest $request, $id)
+    public function update(SubCategoryRequest $request, $id)
     {
         $fields = $request->validated();
 
         $subCategories = $this->findById(SubCategory::class, $id);
-        
+
         if (!$subCategories) {
             return response()->json(['message' => 'Subcategory not found'], 404);
         }

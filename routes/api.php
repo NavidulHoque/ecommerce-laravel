@@ -88,7 +88,7 @@ Route::prefix('promo-codes')->controller(PromoCodesController::class)->group(fun
 });
 
 Route::prefix('reviews')->controller(ReviewsController::class)->group(function () {
-    Route::middleware(['jwt.verify', 'role:buyer|admin'])->group(function () {
+    Route::middleware(['jwt.verify', 'role:buyer|seller|admin'])->group(function () {
         Route::post('create', 'store');
         Route::patch('update-review','update');
         Route::delete('delete-review','destroy');

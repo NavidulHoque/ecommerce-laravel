@@ -50,12 +50,8 @@ class ResourcesRequest extends BasePaginatedRequest
 
             foreach ($resourceRules as $field => $rule) {
 
-                if ($field === "created_by" || $field === "status") {
+                if ($field === "category_id" || $field === "sub_category_id" || $field === "created_by" || $field === "status") {
                     $resourceRules[$field] = 'nullable|' . $rule;
-                }
-
-                else if($field === "category_id" || $field === "sub_category_id"){
-                    $resourceRules[$field] = 'required|' . $rule;
                 }
             }
 
