@@ -4,24 +4,22 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification as BaseNotification;
 
 class Notification extends BaseNotification implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
+    private $message;
+
+    public function __construct($message)
     {
-        //
+        $this->message = $message;
     }
 
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database'];  // or ['mail', 'database', 'broadcast']
     }
 
     /**
@@ -35,15 +33,11 @@ class Notification extends BaseNotification implements ShouldQueue
     //         ->line('Thank you for using our application!');
     // }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
+    // Data to store in the notifications table
+    public function toDatabase($notifiable)
     {
         return [
-            //
+            'message' => $this->message
         ];
     }
 }
